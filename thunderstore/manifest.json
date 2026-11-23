@@ -1,0 +1,10 @@
+{
+  "name": "ProductionBottlenecks",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/GKJ-Super-Fantasy-Kingdom/ProductionBottlenecks",
+  "description": "See why a town producer is idle in its native hover tooltip and building panel, using mouse or controller.",
+  "dependencies": [
+    "BepInEx-BepInExPack-5.4.2305",
+    "BepInEx-HideManagerGameObject_Config-5.4.2304"
+  ]
+}
