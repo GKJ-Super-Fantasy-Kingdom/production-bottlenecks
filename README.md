@@ -30,3 +30,9 @@ python package.py
 ```
 
 The checks exercise the production-state reader against managed fixtures. The package script verifies the archived files against the source listing and Release binary, then writes the ZIP under `dist/`. Gameplay, physical controller behavior, and in-game layout require the playtest above.
+
+## Contributing and license
+
+Bug reports and pull requests are welcome. See the [contribution guide](CONTRIBUTING.md) for local testing and reporting instructions.
+
+The original mod code is available under the [MIT License](LICENSE). Super Fantasy Kingdom, its game assets, and third-party dependencies retain their respective licenses and ownership.
