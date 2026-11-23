@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../src/HoverTooltip.cs" Link="HoverTooltip.cs" />
     <Compile Include="../src/ProductionStatus.cs" Link="ProductionStatus.cs" />
   </ItemGroup>
 </Project>

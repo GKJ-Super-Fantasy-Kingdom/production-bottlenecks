@@ -1,13 +1,27 @@
 # Production Bottlenecks
 
-Hover over a town production building, or move the controller's world cursor onto it. If production is blocked, one line explains why. Select the building to see the same line in its panel. The game's existing worker-details action and device prompts still work while you inspect the building.
+Hover over a production building, or move the controller's world cursor onto it. If production is blocked, one line explains why. Select the building to see the same line in its panel. The game's existing worker-details action and device prompts still work while you inspect the building.
 
-The first release covers disabled worker slots, missing resources reported by the game, full local output storage, and weather restrictions. **Idle** means the building has raised its out-of-work sign without a more specific cause. Buildings with active jobs and crafters finishing an announced batch normally have no status line. The short messages are in English and resource names come from the game.
+The tooltip follows the building's live worker slots, out-of-work sign, selected recipe or queued task, reported resource shortage, weather and local output storage. A Lumberyard can show a blockage while another worker is on a job. Producers, processors and other buildings with a native work warning use the same checks. When the sign has no specific cause, the line reads **Idle** or **Work blocked** if another worker is active.
+
+**Needs 3 Flour** means the selected recipe still needs three units at this building. Goods in transit count once delivered. Gatherers such as the Goldmine usually report only the deposit type, so the tooltip shows its icon and localized name without a quantity. A missing text glyph can be drawn from the resource's game sprite directly. A readable name remains when the sprite is unavailable.
+
+Mods that change the game's selected recipe, ingredient amounts, stock, resource data or warning state are picked up on refresh. A rule that stays private to another mod can only be described as specifically as the information it shares with the game. Custom tooltips keep priority over this mod's hover text.
+
+## In-game examples
+
+On day 13 in the Human Kingdom, the Goldmine reports **Needs Ore**. The icon between the two words is the game's Ore sprite.
+
+![Goldmine tooltip showing Needs Ore with the Ore icon](docs/screenshots/0.1.2/goldmine-ore.png)
+
+The staffed Lumberyard reports **Needs Tree** while its out-of-work sign is visible. Both buildings report a deposit type, so neither tooltip gives a recipe count.
+
+![Lumberyard tooltip showing Needs Tree with the Tree icon](docs/screenshots/0.1.2/lumberyard-tree.png)
 
 ## Local import
 
 1. In Thunderstore Mod Manager, choose **Super Fantasy Kingdom** and open your test mod profile. Install the two BepInEx dependencies listed in the manifest if the profile needs them.
-2. Open **Settings**, find **Import local mod**, and select `ProductionBottlenecks-0.1.0.zip` intact.
+2. Open **Settings**, find **Import local mod**, and select `ProductionBottlenecks-0.1.2.zip` intact.
 3. Choose **Start modded**. In the profile's `BepInEx/LogOutput.log`, look for `Production Bottlenecks ready.` This confirms the plugin registered its game hooks.
 
 ## Controller playtest
@@ -16,8 +30,9 @@ Use a test kingdom with a staffed producer during working hours. Repeat at **UI 
 
 1. Set the building's worker assignment to zero. Once its last active job ends, point the world cursor at it. Expect **No worker assigned** before pressing a button. Hold and release the game's worker-details action. The status should stay with the focused building.
 2. Select the building using the native confirm action. Expect the same status in its panel. Restore a worker slot using the panel controls. The message should clear or change to the next blocker. Check that the worker buttons remain reachable and the status fits alongside their prompts.
-3. At a crafter with an unavailable input, wait for the game to flag the shortage. Expect **Needs** followed by the resource name. Restore supply and watch it clear when work resumes. Fill the selected recipe's local output store, let the last batch finish, and check for **Output storage full**. Make room and recheck.
-4. Close the panel, move focus to a different building, then point at empty ground. Check focus return and that the previous status disappears. Switch to mouse and keyboard, hover, use the existing worker-details binding, and reopen the panel. Verify the glyphs follow the active device and that the text fits at both scales.
+3. At a crafter with an unavailable input, wait for the game to flag the shortage. Expect **Needs** with the resource icon and name. For a recipe costing four Flour with one Flour delivered, expect **3**. Restore supply and watch it clear when work resumes. Fill the selected recipe's local output store, let the last batch finish, and check for **Output storage full**. Make room and recheck.
+4. Focus a Goldmine that reports missing Ore, then a Lumberyard with a visible work sign and workers still assigned. Check the Ore sprite and the Lumberyard’s current reason. If a recipe-changing mod is enabled, switch recipes and check the new icon and remaining amount.
+5. Close the panel, move focus to a different building, then point at empty ground. Check focus return and that the previous status disappears. Switch to mouse and keyboard, hover, use the existing worker-details binding, and reopen the panel. Verify the glyphs follow the active device and that the text fits at both scales.
 
 ## Build
 

@@ -1,4 +1,8 @@
 // Small managed fixtures for state transitions. The plugin project references the installed game.
+using UnityEngine;
+
+namespace UnityEngine { public sealed class Sprite { public string name; } }
+
 namespace SuperFantasyKingdom.Weather
 {
     public enum WeatherTypes { None, Storm }
@@ -6,16 +10,33 @@ namespace SuperFantasyKingdom.Weather
 
 namespace SuperFantasyKingdom
 {
-    public enum ResourceType { None, Bread, Flour }
-    public sealed class ResourceData { public string GetName() => "Flour"; }
+    public enum ResourceType { None, Bread, Flour, Tree }
+
+    public sealed class ResourceData
+    {
+        public string Name;
+        public Sprite icon;
+        public string GetName() => Name;
+    }
+    public struct ResourceAmount
+    {
+        public ResourceType type;
+        public int amount;
+        public ResourceAmount(ResourceType type, int amount) { this.type = type; this.amount = amount; }
+    }
     public sealed class RaceManager
     {
         public static RaceManager Instance = new RaceManager();
-        public ResourceData GetResourceData(ResourceType type) => new ResourceData();
+        public ResourceData GetResourceData(ResourceType type) => new ResourceData
+        {
+            Name = type.ToString(), icon = type == ResourceType.Tree ? new Sprite { name = "TreeSprite" } : null
+        };
+        public Sprite GetResourceIcon(ResourceType type) => GetResourceData(type).icon;
     }
     public sealed class ResourceStorage
     {
-        public readonly int[] Capacity = new int[3], Stored = new int[3], Announced = new int[3];
+        public readonly int[] Capacity = new int[4], Stored = new int[4], Announced = new int[4];
+        public int[] GetAllResourceQuantity() => Stored;
         public int[] GetStorageSpaces() => Capacity;
         public int GetAnnouncedResourceQuantity(ResourceType type) => Announced[(int)type];
         public int SpaceForResource(ResourceType type, bool real) =>
@@ -31,7 +52,8 @@ namespace SuperFantasyKingdom.Buildings
     public enum BuildingSize { Big, Small }
     public class Building
     {
-        public bool Outside, Producer = true;
+        public bool Outside, Processor, Producer = true;
+        public bool IsProcessor() => Processor;
         public bool IsOutside() => Outside;
         public bool IsProducer() => Producer;
     }
@@ -59,6 +81,11 @@ namespace SuperFantasyKingdom.Buildings
         public BuildingSize GetBuildingSize() => Size;
         public bool IsUpgradeActive() => EnabledSlot;
         public ResourceStorage GetStorage() => Storage;
+        public int GetResourceQuantity(ResourceType type) => Storage.Stored[(int)type];
+        public List<CraftingRecipe> Recipes;
+        public int CurrentRecipe;
+        public List<CraftingRecipe> GetCraftingRecipes(bool addQueued = false) => Recipes;
+        public int GetCurrentlyCrafting() => CurrentRecipe;
         public ResourceType GetResource() => Output;
         public ResourceType GetMissingResource() => Missing;
         public WeatherTypes GetWeatherRestriction() => Weather;
@@ -67,14 +94,11 @@ namespace SuperFantasyKingdom.Buildings
     public class BuildingGeneratingg : BuildingCity { }
     public class BuildingVeinGenerate : BuildingCity { }
     public class BuildingVeinGenerateMorning : BuildingCity { }
-    public struct CraftingRecipe { public ResourceType product; }
+    public struct CraftingRecipe { public ResourceType product; public ResourceAmount[] ingredients; }
     public class BuildingCrafting : BuildingCity
     {
-        public readonly List<CraftingRecipe> Recipes = new List<CraftingRecipe>();
-        public int CurrentRecipe;
+        public BuildingCrafting() { Recipes = new List<CraftingRecipe>(); }
         public bool Real = true;
-        public List<CraftingRecipe> GetCraftingRecipes() => Recipes;
-        public int GetCurrentlyCrafting() => CurrentRecipe;
         public bool IsProductReal(ResourceType type) => Real;
     }
     public class BuildingDemand : BuildingCrafting

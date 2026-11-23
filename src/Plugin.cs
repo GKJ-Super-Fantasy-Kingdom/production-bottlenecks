@@ -8,10 +8,12 @@ using SuperFantasyKingdom.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Localization;
+using SuperFantasyKingdom.Weather;
 
 namespace ProductionBottlenecks
 {
-    [BepInPlugin(Id, "Production Bottlenecks", "0.1.0")]
+    [BepInPlugin(Id, "Production Bottlenecks", "0.1.2")]
     public sealed class Plugin : BaseUnityPlugin
     {
         private const string Id = "sfk.productionbottlenecks";
@@ -19,6 +21,8 @@ namespace ProductionBottlenecks
         private Harmony patches;
         private BuildingCity hovered;
         private string tooltipText;
+        private Building nativeWarningOwner;
+        private string nativeWarningText;
         private bool gamepad;
         private float nextRefresh;
         private BuildingCity selected;
@@ -50,10 +54,30 @@ namespace ProductionBottlenecks
         [HarmonyPatch(typeof(UIBuildingWarnings), "UIBuildingOnMouseEnter")]
         private static class BuildingWarning
         {
-            // The game normally writes up to three messages to the same tooltip here.
-            // For town producers, LateUpdate writes one reason for the native highlighted building.
-            private static bool Prefix(Building building) =>
-                instance == null || !instance.isActiveAndEnabled || !ProductionStatus.Supports(building);
+            // Let the native handler and other patches run. Only its known, localized
+            // warning text may be replaced when the same building remains highlighted.
+            private static void Postfix(Building building, LocalizedString ___stringMissing,
+                LocalizedString ___stringStorageFull, LocalizedString ___stringBadWeather)
+            {
+                if (instance == null) return;
+                instance.nativeWarningOwner = null;
+                instance.nativeWarningText = null;
+                var tip = TooltipManager.Instance;
+                if (building == null || building.IsOutside() || tip == null || !tip.IsOpen()) return;
+
+                string visible = TooltipLabel(tip).text;
+                var missing = building.GetMissingResource();
+                var data = missing != ResourceType.None && RaceManager.Instance != null
+                    ? RaceManager.Instance.GetResourceData(missing) : null;
+                bool matches = (data != null && visible == ___stringMissing.GetLocalizedString(data.GetName())) ||
+                    (building.GetWeatherRestriction() != WeatherTypes.None && visible == ___stringBadWeather.GetLocalizedString()) ||
+                    (building.IsProducer() && building.GetStorage() != null && visible == ___stringStorageFull.GetLocalizedString());
+                if (matches)
+                {
+                    instance.nativeWarningOwner = building;
+                    instance.nativeWarningText = visible;
+                }
+            }
         }
 
         [HarmonyPatch(typeof(UIOverlayVariable), nameof(UIOverlayVariable.Generate),
@@ -62,8 +86,8 @@ namespace ProductionBottlenecks
         {
             private static void Postfix(UIOverlayVariable __instance, Building building)
             {
-                if (instance != null && ProductionStatus.Supports(building))
-                    instance.AttachRow(__instance, (BuildingCity)building);
+                if (instance != null && building is BuildingCity city)
+                    instance.AttachRow(__instance, city);
             }
         }
 
@@ -87,7 +111,7 @@ namespace ProductionBottlenecks
 
         private void UpdateRow()
         {
-            string reason = selected != null ? ProductionStatus.Read(selected) : null;
+            string reason = selected != null ? ProductionStatus.Read(selected, RowIcon) : null;
             if (reason != null && label.text != reason)
                 label.text = reason;
             if (row.activeSelf != (reason != null))
@@ -120,25 +144,31 @@ namespace ProductionBottlenecks
 
             if (row != null && label != null && row.transform.parent.gameObject.activeInHierarchy)
                 UpdateRow();
-            if (target != null && ProductionStatus.Supports(target))
-                UpdateTooltip(ProductionStatus.Read(target));
+            if (target != null)
+                UpdateTooltip(ProductionStatus.Read(target, TooltipIcon));
+        }
+
+        private string RowIcon(Sprite sprite) => ResourceIcon.Tag(label, sprite);
+
+        private string TooltipIcon(Sprite sprite)
+        {
+            var tip = TooltipManager.Instance;
+            return tip != null ? ResourceIcon.Tag(TooltipLabel(tip), sprite) : null;
         }
 
         private void UpdateTooltip(string reason)
         {
             var tip = TooltipManager.Instance;
-            if (tip == null) return;
-            if (reason == null)
-            {
-                ClearTooltip();
-                return;
-            }
-            // Give other game tools (for example the worker count after assignment) priority.
-            if (tip.IsOpen() && (TooltipLabel(tip).text != tooltipText || reason == tooltipText))
-                return;
+            if (tip == null || (reason == null && tooltipText == null && nativeWarningOwner != hovered)) return;
+            string visible = tip.IsOpen() ? TooltipLabel(tip).text : null;
+            if (visible != tooltipText) tooltipText = null;
+
+            string message = HoverTooltip.NextText(hovered.GetTitle(), reason, visible, tooltipText,
+                nativeWarningOwner == hovered ? nativeWarningText : null);
+            if (message == null) return;
 
             tip.StopFollowMouse();
-            tip.SetAnchor(TooltipManager.AnchorPresets.Top);
+            tip.SetAnchor(reason == null ? TooltipManager.AnchorPresets.TopLeft : TooltipManager.AnchorPresets.Top);
             var position = Vector3.zero;
             if (gamepad)
             {
@@ -149,8 +179,8 @@ namespace ProductionBottlenecks
             {
                 tip.FollowMouse();
             }
-            tooltipText = reason;
-            tip.Display(reason, position, fix: false);
+            tooltipText = reason == null ? null : message;
+            tip.Display(message, position, fix: false);
         }
 
         private void ClearTooltip()
