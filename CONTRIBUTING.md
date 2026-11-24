@@ -6,7 +6,7 @@ Open a [GitHub issue](https://github.com/GKJ-Super-Fantasy-Kingdom/production-bo
 
 ## Submit a change
 
-Fork the repository, create a branch, and follow the build and packaging instructions in the [README](README.md). Use the assemblies from your own game installation and BepInEx profile as build references. Keep game binaries, save files, and local build output out of commits.
+Fork the repository, create a branch, and follow the build and packaging instructions in the [development and playtesting guide](docs/development.md). Use the assemblies from your own game installation and BepInEx profile as build references. Keep game binaries, save files, and local build output out of commits.
 
 Describe the player-visible change in your pull request. List the checks you ran and, where relevant, which controller actions and UI scales you tested.
 

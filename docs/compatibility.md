@@ -2,6 +2,43 @@
 
 Production Bottlenecks reads the active building's public game state on hover and selection. Other mods can change that state without referencing this plugin. The package depends only on BepInEx and its manager configuration.
 
+## Controller visits in 0.2.3
+
+The native controller cursor searches the UI physics layer within 0.15 world units and can move the camera to a solid collider’s transform. The Human Lumberyard’s pointer handler is on its root, while the 2 × 2 box that receives the hit is on its child named Click. The old visit code checked the root for a collider and fell back to the building’s origin. Two Lumberyards 0.38 units apart can both cover that origin. The original crowded run missed the expected instance twice; a later crowded run reached it at both scales.
+
+The list looks for an active collider whose pointer events reach the chosen building. It accounts for camera rounding, checks the actual reachable point, and uses the building’s native inspection panel if it cannot find an exclusive world target. A trigger collider can use an exposed point without attracting the camera. For a solid collider, the native magnet’s destination must itself be clear. The check runs only on controller confirmation in this list. Other pointer handlers and normal camera navigation retain their native behavior.
+
+Offline fixtures used saved positions and installed prefab collider dimensions for 11 Human buildings. The smallest center-to-neighbor-box clearance was 1.0 world unit, including the Sawmill beside the Castle. All 11 centers passed the candidate’s 0.18-unit clearance. Four distant reward outposts and other kingdom layouts were outside the sample. The crowded, coincident, offset and trigger cases are in [the regression fixture](../tests/VisitPointChecks.cs). Fully coincident buildings share a world cursor location and can show the same plot coordinates.
+
+The 0.8.068 Windows player verified both members of a neighboring Goldmine/Bakery pair on native plots at 1× and 1.5×. Each kept its own map focus. At both scales, either row in a 0.38-unit pair opened its exact native panel, as did a selected fully coincident building. Back returned to the map and left-stick movement resumed. The right stick assigned a worker on an ordinary plot, and the native staffing button changed only its selected building in the crowded pair. The combined run also exercised Pin a Build Cost and Worker Presets with virtual input.
+
+## Combined UI review in 0.2.2
+
+The local ZIP passed 116 live checks in the 0.8.068 Windows player at 1920 × 1080 on a copied Human Kingdom save. With 13 GKJ mods and Achievement Enabler loaded, both UI scales kept the focused row, shortage, pin and staffing controls legible. The probe visited both same-name Lumberyards by instance, opened Worker Presets and pinned Forester. It checked keyboard, mouse, virtual gamepad, removal of the selected row and multiple warnings clearing together. A fresh process rebuilt the list with the same unstaffed plot after a native save and tavern transition.
+
+On distinct plots both scales kept the intended world focus. Early stress testing with deliberately overlapping synthetic colliders produced intermittent focus differences. Physical controller feel and custom buildings stacked on the same plot remain open.
+
+## Scrolling Blocked Buildings in 0.2.1
+
+The 0.8.068 Windows player ran the packaged DLL on a copied Human Kingdom save with all ten GKJ mods. At 1920 × 1080, four blocked buildings fit without a scrollbar at both UI scales. With 17 buildings, nine complete rows fit at 1× and five at 1.5× with the Forester upgrade pinned and Daybook’s resource ledger visible. The header and Back stayed on-screen and clear of both HUD elements.
+
+The virtual D-pad reached every row and kept each focused row fully visible. Confirm visited the exact last Lumberyard among several with the same name. The run also exercised the mouse wheel, scrollbar dragging, keyboard navigation, and mouse selection. Removing the bottom building kept its nearest surviving neighbor focused. Clearing every warning moved focus to Back, and a new blockage appeared without reopening the list. The run used virtual input and did not evaluate physical controller feel.
+
+[Four buildings at 1.5×](screenshots/0.2.1/blocked-four-1p5x.png) · [Top of the list at 1×](screenshots/0.2.1/blocked-scroll-1x.png) · [Bottom of the list at 1.5×](screenshots/0.2.1/blocked-scroll-bottom-1p5x.png)
+
+## Blocked Buildings in 0.2.0
+
+The local ZIP ran in the 0.8.068 Windows player with all ten GKJ mods on an isolated copy of a Human Kingdom save. The probe prepared a staffed Bakery reporting Flour and a Lumberyard with zero worker slots. It exercised the native actions with a virtual gamepad, mouse and keyboard. The final run passed 77 live checks.
+
+At UI scales 1 and 1.5, D-pad navigation and Confirm opened the list and visited both buildings. The probe compared the actual highlighted game object with the chosen instance and checked its on-screen position. A right-stick assignment added a worker slot to the Lumberyard, and its missing-worker warning cleared on reopening the list. The native Back glyph, panel rows, pinned Forester upgrade and Daybook HUD fit on the 1920 × 1080 screen.
+
+Further checks covered two same-name Lumberyards, removal of the selected Bakery while the list was open, paging, keyboard navigation and confirmation, mouse clicks, and the transition to an empty list. Physical controller feel remains an open check.
+
+| UI scale | Blocked buildings | Lumberyard after worker assignment |
+| --- | --- | --- |
+| 1× | [List](screenshots/0.2.0/blocked-list-1x.png) | [Map focus](screenshots/0.2.0/blocked-focus-1x.png) |
+| 1.5× | [List](screenshots/0.2.0/blocked-list-1p5x.png) | [Map focus](screenshots/0.2.0/blocked-focus-1p5x.png) |
+
 ## Panel reuse and tooltip dismissal in 0.1.5
 
 The city and world panel generators both release this mod's previous row when the same panel changes to a replacement view. An unrelated panel keeps its own state. Closing a visible tooltip on a blocked building keeps that shortage closed until the blocker changes or focus leaves and returns. This applies to a third-party card that occupied the tooltip while the same shortage was active.

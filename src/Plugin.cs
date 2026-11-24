@@ -13,7 +13,7 @@ using SuperFantasyKingdom.Weather;
 
 namespace ProductionBottlenecks
 {
-    [BepInPlugin(Id, "Production Bottlenecks", "0.1.5")]
+    [BepInPlugin(Id, "Production Bottlenecks", "0.2.3")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private const string Id = "sfk.productionbottlenecks";
@@ -184,6 +184,7 @@ namespace ProductionBottlenecks
             }
             foreach (var graphic in row.GetComponentsInChildren<Graphic>(true))
                 graphic.raycastTarget = false;
+            launcher = BlockedBuildingsList.AddLauncher(panel.transform, () => OpenBlockedList(city));
             rowPanel = panel;
             selected = city;
             UpdateRow();

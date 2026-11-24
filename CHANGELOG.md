@@ -1,3 +1,24 @@
+# 0.2.3
+
+- Open **Blocked Buildings** from a city building’s panel to see each blocked building and its current reason. The list scrolls with the mouse wheel or controller focus and updates as warnings clear.
+- Identify same-name buildings by their plot coordinates. If a selected warning disappears, focus moves to the nearest surviving row.
+
+- Controller visits use the building’s click collider. When nearby targets make map focus ambiguous, the list opens the chosen building’s native inspection panel.
+
+# 0.2.2 (local test build)
+
+- Same-name buildings show their map coordinates. Select a row to visit that plot.
+- When several warnings clear together, focus follows the closest surviving row.
+
+# 0.2.1 (local test build)
+
+- Blocked Buildings expands to fit available space. Longer lists scroll with the mouse wheel or as keyboard and controller focus moves between rows.
+
+# 0.2.0 (local test build)
+
+- Open **Blocked Buildings** from a city building’s inspection panel to browse buildings that currently report a production warning.
+- Select a row to visit that building. The list refreshes as warnings change and offers additional pages for longer lists.
+
 # 0.1.5
 
 This update includes the recipe, tooltip layout and controller improvements tested in the 0.1.3 and 0.1.4 local builds.

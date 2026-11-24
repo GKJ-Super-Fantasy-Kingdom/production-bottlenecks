@@ -153,4 +153,5 @@ Expect(swapped, "Reported shortage of <sprite name=\"WheatSprite\"> Wheat", "sto
 swapped.Missing = ResourceType.None;
 Expect(swapped, null, "wheat stock and warning cleared");
 HoverChecks.Run(Check);
-Console.WriteLine($"{count} production-state fixture checks passed.");
+VisitPointChecks.Run(Check);
+Console.WriteLine($"{count} managed fixture checks passed.");

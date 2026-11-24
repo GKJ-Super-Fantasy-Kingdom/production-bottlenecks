@@ -10,6 +10,23 @@ namespace ProductionBottlenecks
     public sealed partial class Plugin
     {
         private UIOverlayVariable rowPanel;
+        private UnityEngine.GameObject launcher;
+        private bool openingList;
+
+        private void OpenBlockedList(BuildingCity source)
+        {
+            if (source == null || selected != source || rowPanel == null) return;
+            var overlays = SuperFantasyKingdom.OverlayManager.Instance;
+            if (!overlays.IsOpen() || !overlays.CloseOverlay() || overlays.IsOpen()) return;
+            // Reuse the native selection panel's header, cancel prompt and action map.
+            openingList = true;
+            try
+            {
+                overlays.OverlayVariable(source, new List<UIBuildingOverlayElement>(), "Blocked Buildings");
+                BlockedBuildingsList.Open(overlays.GetOverlaySelection());
+            }
+            finally { openingList = false; }
+        }
 
         [HarmonyPatch(typeof(UIOverlayVariable), nameof(UIOverlayVariable.Generate),
             new Type[] { typeof(Building), typeof(List<UIBuildingOverlayElement>), typeof(string) })]
@@ -18,7 +35,7 @@ namespace ProductionBottlenecks
             private static void Postfix(UIOverlayVariable __instance, Building building, bool __runOriginal)
             {
                 if (instance == null) return;
-                if (__runOriginal && building is BuildingCity city)
+                if (__runOriginal && !instance.openingList && building is BuildingCity city)
                     instance.AttachRow(__instance, city);
                 else
                     instance.ReleasePanelRow(__instance);
@@ -43,6 +60,12 @@ namespace ProductionBottlenecks
 
         private void ReleaseRow()
         {
+            if (launcher != null)
+            {
+                launcher.SetActive(false);
+                Destroy(launcher);
+                launcher = null;
+            }
             if (row != null)
             {
                 row.SetActive(false);
