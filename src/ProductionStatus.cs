@@ -8,43 +8,44 @@ namespace ProductionBottlenecks
 {
     internal static class ProductionStatus
     {
-        private static bool HasWorkSign(BuildingCity city)
-        {
-            var sign = city.GetOutOfWorkRenderer();
-            return sign != null && sign.enabled && sign.gameObject.activeInHierarchy;
-        }
-
         internal static string Read(BuildingCity city, Func<Sprite, string> iconTag)
         {
-            bool signVisible = HasWorkSign(city);
+            // The native warning handler displays weather last, even during other jobs.
+            if (city.GetWeatherRestriction() != WeatherTypes.None)
+                return "Waiting for better weather";
+
+            var sign = city.GetOutOfWorkRenderer();
+            bool signVisible = sign != null && sign.enabled && sign.gameObject.activeInHierarchy;
             bool busy = city.GetCurrentlyWorking() > 0 || city.IsUpgradeWorking() || city.GetCurrentlyInside() > 0;
-            if (busy && !signVisible) return null;
+            var missing = city.GetMissingResource();
+            if (busy && !signVisible && (sign != null || missing == ResourceType.None)) return null;
 
             var recipes = city.GetCraftingRecipes();
-            var missing = city.GetMissingResource();
-            var weather = city.GetWeatherRestriction();
             bool production = city.IsProducer() || city.IsProcessor() || recipes?.Count > 0;
-            if (!production && !signVisible && missing == ResourceType.None && weather == WeatherTypes.None)
+            if (!production && !signVisible && missing == ResourceType.None)
                 return null;
 
             int index = city.GetCurrentlyCrafting();
             if (city is BuildingDemand demand)
             {
-                var queue = demand.GetQueue();
-                if (queue == null || queue.Count == 0)
-                    return signVisible && !demand.IsCrafting() ? "Queue a task" : null;
                 if (demand.IsCrafting() && !signVisible) return null;
-                index = queue[0];
+                // Once started, the task panel and job use GetCurrentlyCrafting().
+                if (!demand.IsStarted() && !demand.IsCrafting())
+                {
+                    var queue = demand.GetQueue();
+                    if (queue == null || queue.Count == 0) return signVisible ? "Queue a task" : null;
+                    index = queue[0];
+                }
             }
             CraftingRecipe? recipe = recipes != null && (uint)index < (uint)recipes.Count ? recipes[index] : (CraftingRecipe?)null;
-            var output = recipes != null || city is BuildingCrafting ? recipe?.product ?? ResourceType.None : city.GetResource();
+            var output = recipes?.Count > 0 || city is BuildingCrafting ? recipe?.product ?? ResourceType.None : city.GetResource();
             if (output != ResourceType.None && city is BuildingCrafting craft && !craft.IsProductReal(output))
                 output = ResourceType.None;
 
             var storage = city.GetStorage();
             var spaces = storage != null ? storage.GetStorageSpaces() : null;
             bool storesOutput = output != ResourceType.None && spaces != null &&
-                (uint)output < (uint)spaces.Length && spaces[(int)output] > 0;
+                (uint)output < (uint)spaces.Length && storage.GetStorageSpace(output) > 0;
 
             if (!signVisible && storesOutput && city is BuildingCrafting && storage.GetAnnouncedResourceQuantity(output) > 0)
                 return null;
@@ -53,7 +54,7 @@ namespace ProductionBottlenecks
             if (!automatic && (production || signVisible))
             {
                 bool specialist = city.GetBuildingSize() == BuildingSize.Small && city.CanUpgradeBeActivated();
-                if (specialist ? !city.IsUpgradeActive() : city.GetMaxWorkers() > 0 && city.GetPossibleWorkers() == 0)
+                if (specialist ? !city.IsUpgradeActive() : city.GetMaxWorkers() > 0 && city.GetPossibleWorkers() == 0 && city.GetPossibleJobs() == 0)
                     return "No worker assigned";
             }
 
@@ -62,9 +63,6 @@ namespace ProductionBottlenecks
 
             if (missing != ResourceType.None)
                 return FormatShortage(city, missing, city is BuildingDemand active && active.IsCrafting() ? null : recipe, iconTag);
-
-            if (weather != WeatherTypes.None)
-                return "Waiting for better weather";
 
             if (!signVisible) return null;
             return busy ? "Work blocked" : "Idle";
@@ -92,9 +90,12 @@ namespace ProductionBottlenecks
                     if (required > 0 || input.amount <= 0) return "Needs " + resource;
                     required = input.amount;
                 }
+                // Selection and the job's last shortage can change on different ticks.
+                if (required == 0 && ingredients.Length > 0) return "Reported shortage of " + resource;
                 int held = city.GetResourceQuantity(missing);
                 if (held >= 0 && required > held)
                     return "Needs " + (required - held) + " " + resource;
+                if (required > 0 && held >= required) return "Reported shortage of " + resource;
             }
             return "Needs " + resource;
         }

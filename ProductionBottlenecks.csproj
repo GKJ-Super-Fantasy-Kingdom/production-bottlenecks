@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.1.2</Version>
+    <Version>0.1.5</Version>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GameDir Condition="'$(GameDir)' == ''">D:\SteamLibrary\steamapps\common\Super Fantasy Kingdom</GameDir>
     <ProfileDir Condition="'$(ProfileDir)' == ''">$(APPDATA)\Thunderstore Mod Manager\DataFolder\SuperFantasyKingdom\profiles\Daybook Dev</ProfileDir>
@@ -17,6 +17,7 @@
     <Reference Include="UnityEngine.UI" HintPath="$(ManagedDir)\UnityEngine.UI.dll" Private="false" />
     <Reference Include="UnityEngine.UIModule" HintPath="$(ManagedDir)\UnityEngine.UIModule.dll" Private="false" />
     <Reference Include="Unity.Localization" HintPath="$(ManagedDir)\Unity.Localization.dll" Private="false" />
+    <Reference Include="UnityEngine.TextCoreFontEngineModule" HintPath="$(ManagedDir)\UnityEngine.TextCoreFontEngineModule.dll" Private="false" />
     <Reference Include="Unity.TextMeshPro" HintPath="$(ManagedDir)\Unity.TextMeshPro.dll" Private="false" />
     <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(ManagedDir)\UnityEngine.TextRenderingModule.dll" Private="false" />
   </ItemGroup>

@@ -8,18 +8,28 @@
 
 ## Controls
 
-Point at a building with the mouse or the controller's world cursor. The reason appears automatically. Use the game's usual select and worker-details actions to inspect the building or change its assignments.
+Point at a building with the mouse or the controller's world cursor. The reason appears automatically. Use the game's usual select and worker-details actions to inspect the building or change its assignments. When you adjust jobs with a controller, the game's hammer icon and worker count appear beneath the focused building.
 
 ## Mod compatibility
 
-The tooltip reads the current recipe, ingredient amounts, local stock and reported shortage as you play. Changes made through those game systems appear on refresh. A custom requirement can be named when its mod reports the missing resource to the game.
+The tooltip reads the current recipe, ingredient amounts, local stock and reported shortage as you play. Changes made through those game systems appear on refresh. A custom requirement can be named when its mod reports the missing resource to the game. If the report disagrees with the current recipe or enough stock has already arrived, the tooltip labels it as a reported shortage.
+
+Closing a tooltip while inspecting a blocked building keeps that shortage closed. Move focus away and back to see it again. A change in the blocker can also show a new warning.
 
 ## Installation
 
 Choose **Install with App** in Thunderstore, select your **Super Fantasy Kingdom** profile, and launch with **Start modded**.
 
-## In-game screenshots
+## In-game examples
 
-![Goldmine showing Needs Ore with the Ore icon](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0d21b74b7bab4521c091f56082c7ac28bbd4a882/docs/screenshots/0.1.2/goldmine-ore.png)
+With BakeryUsesWheat 1.2.0 enabled, delivering one of the two required Wheat leaves **Needs 1 Wheat** beneath the Bakery name. Captured in 0.1.3.
 
-![Staffed Lumberyard showing Needs Tree with the Tree icon](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0d21b74b7bab4521c091f56082c7ac28bbd4a882/docs/screenshots/0.1.2/lumberyard-tree.png)
+![Bakery tooltip showing Needs 1 Wheat after one delivery](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.3/bakery-one-wheat.png)
+
+Before that delivery, the selected Bakery shows **Needs 2 Wheat** below the worker control. Its storage and recipe are visible in the same panel. Captured at UI scale 1.5 in 0.1.3.
+
+![Bakery panel with no Wheat in storage and a two-Wheat shortage](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.3/bakery-panel-1p5x.png)
+
+After a worker assignment, the hammer and **8/7** count appear beside the focused Lumberyard. Captured at UI scale 1.5 with simulated controller input in 0.1.4.
+
+![Native hammer and worker count beneath the focused Lumberyard](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.4/after-1p5x.png)

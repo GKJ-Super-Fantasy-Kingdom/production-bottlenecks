@@ -10,7 +10,7 @@ namespace SuperFantasyKingdom.Weather
 
 namespace SuperFantasyKingdom
 {
-    public enum ResourceType { None, Bread, Flour, Tree }
+    public enum ResourceType { None, Bread, Flour, Tree, Ore, Wheat }
 
     public sealed class ResourceData
     {
@@ -27,20 +27,22 @@ namespace SuperFantasyKingdom
     public sealed class RaceManager
     {
         public static RaceManager Instance = new RaceManager();
-        public ResourceData GetResourceData(ResourceType type) => new ResourceData
+        public ResourceData GetResourceData(ResourceType type) => !System.Enum.IsDefined(type) ? null : new ResourceData
         {
-            Name = type.ToString(), icon = type == ResourceType.Tree ? new Sprite { name = "TreeSprite" } : null
+            Name = type.ToString(), icon = type is ResourceType.Tree or ResourceType.Ore or ResourceType.Wheat ? new Sprite { name = type + "Sprite" } : null
         };
-        public Sprite GetResourceIcon(ResourceType type) => GetResourceData(type).icon;
+        public Sprite GetResourceIcon(ResourceType type) => GetResourceData(type)?.icon;
     }
     public sealed class ResourceStorage
     {
-        public readonly int[] Capacity = new int[4], Stored = new int[4], Announced = new int[4];
+        public readonly int[] Capacity = new int[6], Stored = new int[6], Announced = new int[6];
         public int[] GetAllResourceQuantity() => Stored;
+        public int? EffectiveCapacity;
+        public int GetStorageSpace(ResourceType type) => EffectiveCapacity ?? Capacity[(int)type];
         public int[] GetStorageSpaces() => Capacity;
         public int GetAnnouncedResourceQuantity(ResourceType type) => Announced[(int)type];
         public int SpaceForResource(ResourceType type, bool real) =>
-            Capacity[(int)type] - Stored[(int)type] - (real ? Announced[(int)type] : 0);
+            GetStorageSpace(type) - Stored[(int)type] - (real ? Announced[(int)type] : 0);
     }
 }
 
@@ -71,10 +73,12 @@ namespace SuperFantasyKingdom.Buildings
         public ResourceType Missing, Output = ResourceType.Bread;
         public WeatherTypes Weather;
         public readonly ResourceStorage Storage = new ResourceStorage();
-        public readonly Sign Sign = new Sign();
+        public Sign Sign = new Sign();
         public int GetCurrentlyWorking() => Working;
         public int GetCurrentlyInside() => Inside;
         public bool IsUpgradeWorking() => UpgradeWorking;
+        public int ExtraJobs;
+        public int GetPossibleJobs() => System.Math.Min(Possible, Maximum) + ExtraJobs;
         public int GetPossibleWorkers() => Possible;
         public int GetMaxWorkers() => Maximum;
         public bool CanUpgradeBeActivated() => Specialist;
@@ -103,7 +107,8 @@ namespace SuperFantasyKingdom.Buildings
     }
     public class BuildingDemand : BuildingCrafting
     {
-        public bool Crafting;
+        public bool Crafting, Started;
+        public bool IsStarted() => Started;
         public readonly List<int> Queue = new List<int>();
         public bool IsCrafting() => Crafting;
         public List<int> GetQueue() => Queue;

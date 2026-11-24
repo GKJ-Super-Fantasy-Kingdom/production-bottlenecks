@@ -13,17 +13,21 @@ using SuperFantasyKingdom.Weather;
 
 namespace ProductionBottlenecks
 {
-    [BepInPlugin(Id, "Production Bottlenecks", "0.1.2")]
-    public sealed class Plugin : BaseUnityPlugin
+    [BepInPlugin(Id, "Production Bottlenecks", "0.1.5")]
+    public sealed partial class Plugin : BaseUnityPlugin
     {
         private const string Id = "sfk.productionbottlenecks";
         private static Plugin instance;
         private Harmony patches;
         private BuildingCity hovered;
         private string tooltipText;
+        private HoverVisibility hoverVisibility;
         private Building nativeWarningOwner;
         private string nativeWarningText;
+        private bool emptyOutputWarning;
         private bool gamepad;
+        private BuildingCity workerCountBuilding;
+        private string workerCountText;
         private float nextRefresh;
         private BuildingCity selected;
         private GameObject row;
@@ -31,6 +35,8 @@ namespace ProductionBottlenecks
 
         private static readonly AccessTools.FieldRef<TooltipManager, TextMeshProUGUI> TooltipLabel =
             AccessTools.FieldRefAccess<TooltipManager, TextMeshProUGUI>("text");
+        private static readonly AccessTools.FieldRef<TooltipManager, RectTransform> TooltipFrame =
+            AccessTools.FieldRefAccess<TooltipManager, RectTransform>("rectTransform");
 
         private void Awake()
         {
@@ -40,6 +46,8 @@ namespace ProductionBottlenecks
             {
                 patches.PatchAll(typeof(BuildingWarning));
                 patches.PatchAll(typeof(BuildingPanel));
+                patches.PatchAll(typeof(WorldBuildingPanel));
+                patches.PatchAll(typeof(WorkerCount));
                 Logger.LogInfo("Production Bottlenecks ready.");
             }
             catch
@@ -57,21 +65,32 @@ namespace ProductionBottlenecks
             // Let the native handler and other patches run. Only its known, localized
             // warning text may be replaced when the same building remains highlighted.
             private static void Postfix(Building building, LocalizedString ___stringMissing,
-                LocalizedString ___stringStorageFull, LocalizedString ___stringBadWeather)
+                LocalizedString ___stringStorageFull, LocalizedString ___stringBadWeather, bool __runOriginal)
             {
                 if (instance == null) return;
                 instance.nativeWarningOwner = null;
                 instance.nativeWarningText = null;
+                instance.emptyOutputWarning = false;
                 var tip = TooltipManager.Instance;
-                if (building == null || building.IsOutside() || tip == null || !tip.IsOpen()) return;
+                if (!__runOriginal || building == null || building.IsOutside() || tip == null || !tip.IsOpen()) return;
 
                 string visible = TooltipLabel(tip).text;
                 var missing = building.GetMissingResource();
                 var data = missing != ResourceType.None && RaceManager.Instance != null
                     ? RaceManager.Instance.GetResourceData(missing) : null;
                 bool matches = (data != null && visible == ___stringMissing.GetLocalizedString(data.GetName())) ||
-                    (building.GetWeatherRestriction() != WeatherTypes.None && visible == ___stringBadWeather.GetLocalizedString()) ||
-                    (building.IsProducer() && building.GetStorage() != null && visible == ___stringStorageFull.GetLocalizedString());
+                    (building.GetWeatherRestriction() != WeatherTypes.None && visible == ___stringBadWeather.GetLocalizedString());
+                if (!matches && building.IsProducer() && visible == ___stringStorageFull.GetLocalizedString())
+                {
+                    var storage = building.GetStorage();
+                    var spaces = storage != null ? storage.GetStorageSpaces() : null;
+                    var output = building.GetResource();
+                    if (spaces != null && (uint)output < (uint)spaces.Length && storage.SpaceForResource(output, real: false) <= 0)
+                    {
+                        matches = true;
+                        instance.emptyOutputWarning = output == ResourceType.None || storage.GetStorageSpace(output) == 0;
+                    }
+                }
                 if (matches)
                 {
                     instance.nativeWarningOwner = building;
@@ -80,31 +99,92 @@ namespace ProductionBottlenecks
             }
         }
 
-        [HarmonyPatch(typeof(UIOverlayVariable), nameof(UIOverlayVariable.Generate),
-            new Type[] { typeof(Building), typeof(List<UIBuildingOverlayElement>), typeof(string) })]
-        private static class BuildingPanel
+        [HarmonyPatch(typeof(GameInputManager), "DisplayWorkerAmount")]
+        private static class WorkerCount
         {
-            private static void Postfix(UIOverlayVariable __instance, Building building)
+            [HarmonyPriority(Priority.Last)]
+            private static void Prefix(BuildingCity __0, bool __runOriginal, out bool __state)
             {
-                if (instance != null && building is BuildingCity city)
-                    instance.AttachRow(__instance, city);
+                var tip = TooltipManager.Instance;
+                __state = __runOriginal && instance != null && __0 != null && tip != null &&
+                    GamepadManager.Instance != null && GamepadManager.Instance.IsGamepadInUse();
+                if (!__state) return;
+
+                // Navigation enables legacy mouse tracking. The native count writer
+                // supplies no position, so start with a stationary, centered anchor.
+                tip.StopFollowMouse();
+                tip.SetAnchor(TooltipManager.AnchorPresets.Top);
             }
+
+            private static void Postfix(BuildingCity __0, bool __state, bool __runOriginal)
+            {
+                if (!__state || !__runOriginal) return;
+                var tip = TooltipManager.Instance;
+                if (!tip.IsOpen()) return;
+                instance.workerCountBuilding = __0;
+                instance.workerCountText = TooltipLabel(tip).text;
+                instance.PlaceWorkerCount(tip);
+            }
+        }
+
+        private void PlaceWorkerCount(TooltipManager tip)
+        {
+            var focus = GamepadManager.Instance.GetCursorPosition();
+            var camera = GameCamera.Instance != null ? GameCamera.Instance.GetCamera() : null;
+            if (camera != null)
+            {
+                var point = camera.WorldToScreenPoint(workerCountBuilding.transform.position);
+                if (point.z > 0) focus = point;
+            }
+            var label = TooltipLabel(tip);
+            var scale = TooltipFrame(tip).lossyScale;
+            // TooltipManager sizes its frame from the preferred text size plus 20 x 10.
+            var size = ((label.preferredWidth + 20f) * scale.x, (label.preferredHeight + 10f) * scale.y);
+            var safe = Screen.safeArea;
+            var fitted = HoverTooltip.FitBelowFocus((focus.x, focus.y - 24f * SettingsManager.Instance.GetUIScaling()),
+                size, (safe.xMin, safe.yMin, safe.xMax, safe.yMax), focus.y);
+            tip.transform.position = new Vector3(fitted.X, fitted.Y, tip.transform.position.z);
+        }
+
+        private void RefreshWorkerCount(BuildingCity target, bool usingGamepad)
+        {
+            if (workerCountText == null) return;
+            var tip = TooltipManager.Instance;
+            if (tip != null && tip.IsOpen() && TooltipLabel(tip).text == workerCountText)
+            {
+                if (target != null && target == workerCountBuilding)
+                {
+                    if (usingGamepad)
+                    {
+                        PlaceWorkerCount(tip);
+                        return;
+                    }
+                    tip.FollowMouse();
+                    tip.SetAnchor(TooltipManager.AnchorPresets.TopLeft);
+                    tip.Display(workerCountText, Vector3.zero);
+                }
+                else tip.StopFollowMouse();
+            }
+            workerCountText = null;
+            workerCountBuilding = null;
         }
 
         private void AttachRow(UIOverlayVariable panel, BuildingCity city)
         {
-            // Generate has just called the game's Clean(), which retires the previous rows.
+            // Only one inspected city owns a status row at a time.
+            ReleaseRow();
             var prefab = Resources.Load<GameObject>("UI/OverlayElementText");
             if (prefab == null) return;
             row = Instantiate(prefab, panel.transform);
             label = row.GetComponentInChildren<TextMeshProUGUI>(true);
             if (label == null)
             {
-                Destroy(row);
+                ReleaseRow();
                 return;
             }
             foreach (var graphic in row.GetComponentsInChildren<Graphic>(true))
                 graphic.raycastTarget = false;
+            rowPanel = panel;
             selected = city;
             UpdateRow();
         }
@@ -123,7 +203,9 @@ namespace ProductionBottlenecks
             if (GameManager.Instance == null || !GameManager.Instance.IsGameLoaded() || GameManager.Instance.IsUnloading())
             {
                 ClearTooltip();
+                RefreshWorkerCount(null, false);
                 hovered = null;
+                hoverVisibility = default;
                 return;
             }
 
@@ -132,13 +214,18 @@ namespace ProductionBottlenecks
             var target = ui != null && city != null && OverlayManager.Instance != null &&
                 PauseMenuManger.Instance != null && ui.IsWorldInteractable() ? city.GetHighlightedBuilding() : null;
             bool usingGamepad = GamepadManager.Instance != null && GamepadManager.Instance.IsGamepadInUse();
+            RefreshWorkerCount(target, usingGamepad);
             bool changed = target != hovered || gamepad != usingGamepad;
             if (changed || (target == null && tooltipText != null))
             {
-                ClearTooltip();
+                // Moving our own open card to the other input scheme is an internal close.
+                bool closedOwned = ClearTooltip();
+                if (target != hovered || closedOwned) hoverVisibility = default;
                 hovered = target;
                 gamepad = usingGamepad;
             }
+            if (!gamepad && tooltipText != null)
+                FitMouseTooltip();
             if (!changed && Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + 0.2f;
 
@@ -150,6 +237,24 @@ namespace ProductionBottlenecks
 
         private string RowIcon(Sprite sprite) => ResourceIcon.Tag(label, sprite);
 
+        private void FitMouseTooltip()
+        {
+            var tip = TooltipManager.Instance;
+            if (tip == null || !tip.enabled || !tip.IsOpen() || TooltipLabel(tip).text != tooltipText) return;
+            var frame = TooltipFrame(tip);
+            if (!frame.gameObject.activeInHierarchy) return;
+
+            // FollowMouse writes screen pixels every Update. Move its anchor before
+            // other overlays lay out the rendered frame, keeping their offsets intact.
+            var pos = tip.transform.position;
+            var size = Vector2.Scale(frame.rect.size, frame.lossyScale);
+            var safe = Screen.safeArea;
+            var fitted = HoverTooltip.FitBelowFocus((pos.x, pos.y), (size.x, size.y),
+                (safe.xMin, safe.yMin, safe.xMax, safe.yMax), GamepadManager.Instance.GetCursorPosition().y);
+            if (fitted.X != pos.x || fitted.Y != pos.y)
+                tip.transform.position = new Vector3(fitted.X, fitted.Y, pos.z);
+        }
+
         private string TooltipIcon(Sprite sprite)
         {
             var tip = TooltipManager.Instance;
@@ -159,12 +264,16 @@ namespace ProductionBottlenecks
         private void UpdateTooltip(string reason)
         {
             var tip = TooltipManager.Instance;
-            if (tip == null || (reason == null && tooltipText == null && nativeWarningOwner != hovered)) return;
-            string visible = tip.IsOpen() ? TooltipLabel(tip).text : null;
+            if (tip == null) return;
+            bool open = tip.IsOpen();
+            bool dismissed = hoverVisibility.Observe(reason, open);
+            if (reason == null && tooltipText == null && nativeWarningOwner != hovered) return;
+            string visible = open ? TooltipLabel(tip).text : null;
             if (visible != tooltipText) tooltipText = null;
+            if (dismissed) return;
 
             string message = HoverTooltip.NextText(hovered.GetTitle(), reason, visible, tooltipText,
-                nativeWarningOwner == hovered ? nativeWarningText : null);
+                nativeWarningOwner == hovered ? nativeWarningText : null, emptyOutputWarning);
             if (message == null) return;
 
             tip.StopFollowMouse();
@@ -181,20 +290,22 @@ namespace ProductionBottlenecks
             }
             tooltipText = reason == null ? null : message;
             tip.Display(message, position, fix: false);
+            hoverVisibility.Observe(reason, tip.IsOpen());
         }
 
-        private void ClearTooltip()
+        private bool ClearTooltip()
         {
             var tip = TooltipManager.Instance;
-            if (tooltipText != null && tip != null && tip.IsOpen() && TooltipLabel(tip).text == tooltipText)
-                tip.StopFollowMouse();
+            bool owned = tooltipText != null && tip != null && tip.IsOpen() && TooltipLabel(tip).text == tooltipText;
+            if (owned) tip.StopFollowMouse();
             tooltipText = null;
+            return owned;
         }
 
         private void OnDestroy()
         {
             ClearTooltip();
-            if (row != null) Destroy(row);
+            ReleaseRow();
             patches?.UnpatchSelf();
             instance = null;
         }

@@ -8,25 +8,35 @@ The tooltip follows the building's live worker slots, out-of-work sign, selected
 
 Mods that change the game's selected recipe, ingredient amounts, stock, resource data or warning state are picked up on refresh. A rule that stays private to another mod can only be described as specifically as the information it shares with the game. Custom tooltips keep priority over this mod's hover text.
 
+See the [compatibility audit](docs/compatibility.md) for the tested package versions, bakery shortage results and outstanding in-game checks.
+
 ## In-game examples
 
-On day 13 in the Human Kingdom, the Goldmine reports **Needs Ore**. The icon between the two words is the game's Ore sprite.
+With BakeryUsesWheat 1.2.0 enabled, delivering one of the two required Wheat leaves **Needs 1 Wheat** beneath the Bakery name. Captured in 0.1.3.
 
-![Goldmine tooltip showing Needs Ore with the Ore icon](docs/screenshots/0.1.2/goldmine-ore.png)
+![Bakery tooltip showing Needs 1 Wheat after one delivery](docs/screenshots/0.1.3/bakery-one-wheat.png)
 
-The staffed Lumberyard reports **Needs Tree** while its out-of-work sign is visible. Both buildings report a deposit type, so neither tooltip gives a recipe count.
+Before that delivery, the selected Bakery shows **Needs 2 Wheat** below the worker control. Its storage and recipe are visible in the same panel. Captured at UI scale 1.5 in 0.1.3.
 
-![Lumberyard tooltip showing Needs Tree with the Tree icon](docs/screenshots/0.1.2/lumberyard-tree.png)
+![Bakery panel with no Wheat in storage and a two-Wheat shortage](docs/screenshots/0.1.3/bakery-panel-1p5x.png)
+
+After a worker assignment, the hammer and **8/7** count appear beside the focused Lumberyard. Captured at UI scale 1.5 with simulated controller input in 0.1.4.
+
+![Native hammer and worker count beneath the focused Lumberyard](docs/screenshots/0.1.4/after-1p5x.png)
+
+The [Goldmine](docs/screenshots/0.1.2/goldmine-ore.png) and [Lumberyard](docs/screenshots/0.1.2/lumberyard-tree.png) also show the game's Ore and Tree icons when a deposit is missing.
 
 ## Local import
 
 1. In Thunderstore Mod Manager, choose **Super Fantasy Kingdom** and open your test mod profile. Install the two BepInEx dependencies listed in the manifest if the profile needs them.
-2. Open **Settings**, find **Import local mod**, and select `ProductionBottlenecks-0.1.2.zip` intact.
+2. Open **Settings**, find **Import local mod**, and select `ProductionBottlenecks-0.1.5.zip` intact.
 3. Choose **Start modded**. In the profile's `BepInEx/LogOutput.log`, look for `Production Bottlenecks ready.` This confirms the plugin registered its game hooks.
 
 ## Controller playtest
 
 Use a test kingdom with a staffed producer during working hours. Repeat at **UI scale 1** and **1.5**.
+
+Park the mouse away from the building. With the controller world cursor over it, add and remove a worker using the game's assignment controls. The hammer count should follow the focused building. Switch back to mouse and keyboard and check the native worker count and shortage tooltip.
 
 1. Set the building's worker assignment to zero. Once its last active job ends, point the world cursor at it. Expect **No worker assigned** before pressing a button. Hold and release the game's worker-details action. The status should stay with the focused building.
 2. Select the building using the native confirm action. Expect the same status in its panel. Restore a worker slot using the panel controls. The message should clear or change to the next blocker. Check that the worker buttons remain reachable and the status fits alongside their prompts.
@@ -44,7 +54,7 @@ dotnet run --project tests/StatusChecks.csproj -c Release
 python package.py
 ```
 
-The checks exercise the production-state reader against managed fixtures. The package script verifies the archived files against the source listing and Release binary, then writes the ZIP under `dist/`. Gameplay, physical controller behavior, and in-game layout require the playtest above.
+The checks exercise production states and tooltip placement against managed fixtures. The package script verifies the archived files against the source listing and Release binary, then writes the ZIP under `dist/`. See the [compatibility checks](docs/compatibility.md) for live results at both UI scales and the remaining physical controller checks.
 
 ## Contributing and license
 

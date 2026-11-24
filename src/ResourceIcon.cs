@@ -9,6 +9,13 @@ namespace ProductionBottlenecks
         private static readonly Dictionary<Sprite, string> CustomTags = new Dictionary<Sprite, string>();
         private static readonly char[] InvalidName = { '"', '<', '>' };
 
+        internal static bool MatchesGlyph(TMP_SpriteAsset atlas, int index, string name, Sprite sprite)
+        {
+            return atlas != null && index >= 0 && index < atlas.spriteCharacterTable.Count &&
+                atlas.GetSpriteIndexFromName(name) == index &&
+                atlas.spriteCharacterTable[index]?.glyph is TMP_SpriteGlyph glyph && glyph.sprite == sprite;
+        }
+
         internal static string Tag(TextMeshProUGUI label, Sprite sprite)
         {
             if (label == null || !label.richText) return null;
@@ -17,7 +24,8 @@ namespace ProductionBottlenecks
             if (atlas != null && !string.IsNullOrEmpty(name) && name.IndexOfAny(InvalidName) < 0)
             {
                 var found = TMP_SpriteAsset.SearchForSpriteByHashCode(atlas, TMP_TextUtilities.GetSimpleHashCode(name), true, out int index);
-                if (found != null && found.GetSpriteIndexFromName(name) == index)
+                // An asset pack can replace a sprite while keeping its atlas name.
+                if (MatchesGlyph(found, index, name, sprite))
                     return "<sprite name=\"" + name + "\">";
             }
 
