@@ -18,11 +18,11 @@ See why a production building is idle and how much of an ingredient it still nee
 
 ## Screenshots
 
-![Blocked Buildings with the Bakery focused on Needs 2 Flour and two Lumberyards labeled by plot](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/main/docs/screenshots/0.2.3/blocked-buildings-1x.png)
+![Blocked Buildings with the Bakery focused on Needs 2 Flour and two Lumberyards labeled by plot](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/e39cd233d499496254f12f19046cbd6fa1a86f4d/docs/screenshots/0.2.3/blocked-buildings-1x.png)
 
 At 1×, the Bakery needs two Flour. The two Lumberyards have different plot coordinates and different blockers. Captured in 0.2.3 with virtual controller input.
 
-![Selected Lumberyard showing No worker assigned under the staffing controls and a pinned Forester upgrade](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/main/docs/screenshots/0.2.3/lumberyard-inspection-1p5x.png)
+![Selected Lumberyard showing No worker assigned under the staffing controls and a pinned Forester upgrade](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/e39cd233d499496254f12f19046cbd6fa1a86f4d/docs/screenshots/0.2.3/lumberyard-inspection-1p5x.png)
 
 At 1.5×, selecting one of two overlapping Lumberyards opened this exact building’s inspection panel. The empty Woodcutter slot explains the warning. Captured in 0.2.3 with virtual controller input.
 
