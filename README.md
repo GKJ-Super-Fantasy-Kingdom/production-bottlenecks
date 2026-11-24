@@ -1,30 +1,46 @@
 # Production Bottlenecks
 
-Hover over a production building, or move the controller's world cursor onto it. If production is blocked, one line explains why. Select the building to see the same line in its panel. The game's existing worker-details action and device prompts still work while you inspect the building.
+Hover over a blocked production building to see what it needs. If your Bakery is waiting for an ingredient, its tooltip can show the resource icon and how many more units must reach the building.
 
-The tooltip follows the building's live worker slots, out-of-work sign, selected recipe or queued task, reported resource shortage, weather and local output storage. A Lumberyard can show a blockage while another worker is on a job. Producers, processors and other buildings with a native work warning use the same checks. When the sign has no specific cause, the line reads **Idle** or **Work blocked** if another worker is active.
+## Features
 
-**Needs 3 Flour** means the selected recipe still needs three units at this building. Goods in transit count once delivered. Gatherers such as the Goldmine usually report only the deposit type, so the tooltip shows its icon and localized name without a quantity. A missing text glyph can be drawn from the resource's game sprite directly. A readable name remains when the sprite is unavailable.
+- See the reason beneath the building name and in its selection panel. Warnings include **No worker assigned**, **Output storage full**, **Queue a task**, and **Waiting for better weather**.
+- See the missing amount when the active recipe and local stock identify it. A gatherer such as a Goldmine can show **Needs Ore** with the deposit icon when the game only reports the deposit type.
+- When you change worker assignments with a controller, the game's hammer icon and worker count appear beside the focused building.
 
-Mods that change the game's selected recipe, ingredient amounts, stock, resource data or warning state are picked up on refresh. A rule that stays private to another mod can only be described as specifically as the information it shares with the game. Custom tooltips keep priority over this mod's hover text.
+## How to Use
 
-See the [compatibility audit](docs/compatibility.md) for the tested package versions, bakery shortage results and outstanding in-game checks.
+1. Point at a building with the mouse or move the controller's world cursor onto it. The shortage appears automatically.
+2. Read the line under its name. In the Bakery example below, **Needs 1 Wheat** means one more Wheat must arrive for the current recipe. Left-click the Bakery or use the controller's confirm button to compare the shortage with its storage and recipe.
+3. If the line says **No worker assigned**, use the game's assignment controls while focused on the building. With default bindings, **E** adds a worker slot and **Q** removes one. On a controller, move the **right stick up** to add a slot or **down** to remove one.
 
-## In-game examples
+<a name="in-game-examples"></a>
 
-With BakeryUsesWheat 1.2.0 enabled, delivering one of the two required Wheat leaves **Needs 1 Wheat** beneath the Bakery name. Captured in 0.1.3.
+## Screenshots
 
-![Bakery tooltip showing Needs 1 Wheat after one delivery](docs/screenshots/0.1.3/bakery-one-wheat.png)
+![Bakery tooltip with a Wheat icon between “Needs 1” and “Wheat”](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.3/bakery-one-wheat.png)
 
-Before that delivery, the selected Bakery shows **Needs 2 Wheat** below the worker control. Its storage and recipe are visible in the same panel. Captured at UI scale 1.5 in 0.1.3.
+One of two Wheat has arrived. Look beneath **Bakery** for the remaining **1 Wheat**. Captured in 0.1.3 with [BakeryUsesWheat 1.2.0](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/).
 
-![Bakery panel with no Wheat in storage and a two-Wheat shortage](docs/screenshots/0.1.3/bakery-panel-1p5x.png)
+![Selected Bakery panel showing zero Wheat in storage, a two-Wheat recipe, and “Needs 2 Wheat” below the worker control](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.3/bakery-panel-1p5x.png)
 
-After a worker assignment, the hammer and **8/7** count appear beside the focused Lumberyard. Captured at UI scale 1.5 with simulated controller input in 0.1.4.
+Before the first delivery, the panel shows **Needs 2 Wheat** beneath the baker assignment. Captured in 0.1.3 at 1.5× UI scale with [BakeryUsesWheat 1.2.0](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/).
 
-![Native hammer and worker count beneath the focused Lumberyard](docs/screenshots/0.1.4/after-1p5x.png)
+![Hammer icon and 8/7 worker count beneath the focused Lumberyard](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.4/after-1p5x.png)
 
-The [Goldmine](docs/screenshots/0.1.2/goldmine-ore.png) and [Lumberyard](docs/screenshots/0.1.2/lumberyard-tree.png) also show the game's Ore and Tree icons when a deposit is missing.
+After an assignment change, look just below the Lumberyard for the hammer and **8/7** count. Captured in 0.1.4 at 1.5× UI scale with simulated controller input.
+
+## Compatibility
+
+- The tooltip reads the active recipe and delivered stock. With [BakeryUsesWheat 1.2.0](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/), the Bakery shows how much Wheat it still needs after each delivery.
+- [Pin a Build Cost](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/PinABuildCost/) and [Daybook](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/Daybook/) were tested together with Production Bottlenecks. You can inspect a shortage while a cost is pinned or the ledger is open.
+- If a mod keeps its blocking rule private and the game shows only a work warning, the tooltip can show **Idle** or **Work blocked**. Other mods' open tooltips keep priority.
+
+## Installation
+
+1. Choose **Install with App** on the [Thunderstore listing](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/ProductionBottlenecks/) and select your **Super Fantasy Kingdom** profile.
+2. Install the required [BepInExPack](https://thunderstore.io/c/super-fantasy-kingdom/p/BepInEx/BepInExPack/) and [HideManagerGameObject_Config](https://thunderstore.io/c/super-fantasy-kingdom/p/BepInEx/HideManagerGameObject_Config/) dependencies if your profile needs them.
+3. Choose **Start modded**. Once your kingdom loads, point at a blocked production building to see its warning.
 
 ## Local import
 
@@ -33,6 +49,8 @@ The [Goldmine](docs/screenshots/0.1.2/goldmine-ore.png) and [Lumberyard](docs/sc
 3. Choose **Start modded**. In the profile's `BepInEx/LogOutput.log`, look for `Production Bottlenecks ready.` This confirms the plugin registered its game hooks.
 
 ## Controller playtest
+
+The [Goldmine](docs/screenshots/0.1.2/goldmine-ore.png) and [Lumberyard](docs/screenshots/0.1.2/lumberyard-tree.png) also show the game's Ore and Tree icons when a deposit is missing.
 
 Use a test kingdom with a staffed producer during working hours. Repeat at **UI scale 1** and **1.5**.
 
