@@ -13,7 +13,7 @@ using SuperFantasyKingdom.Weather;
 
 namespace ProductionBottlenecks
 {
-    [BepInPlugin(Id, "Production Bottlenecks", "0.2.3")]
+    [BepInPlugin(Id, "Production Bottlenecks", "0.2.4")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private const string Id = "sfk.productionbottlenecks";

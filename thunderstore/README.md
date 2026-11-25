@@ -20,29 +20,31 @@ See why a production building is idle and how much of an ingredient it still nee
 
 ![Blocked Buildings with the Bakery focused on Needs 2 Flour and two Lumberyards labeled by plot](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/e39cd233d499496254f12f19046cbd6fa1a86f4d/docs/screenshots/0.2.3/blocked-buildings-1x.png)
 
-At 1×, the Bakery needs two Flour. The two Lumberyards have different plot coordinates and different blockers. Captured in 0.2.3 with virtual controller input.
+At 1×, the Bakery needs two Flour. The two Lumberyards have different plot coordinates and different blockers.
 
 ![Selected Lumberyard showing No worker assigned under the staffing controls and a pinned Forester upgrade](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/e39cd233d499496254f12f19046cbd6fa1a86f4d/docs/screenshots/0.2.3/lumberyard-inspection-1p5x.png)
 
-At 1.5×, selecting one of two overlapping Lumberyards opened this exact building’s inspection panel. The empty Woodcutter slot explains the warning. Captured in 0.2.3 with virtual controller input.
+At 1.5×, selecting one of two overlapping Lumberyards opened this exact building’s inspection panel. The empty Woodcutter slot explains the warning.
 
 ![Bakery tooltip with a Wheat icon between “Needs 1” and “Wheat”](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.3/bakery-one-wheat.png)
 
-One of two Wheat has arrived. Look beneath **Bakery** for the remaining **1 Wheat**. Captured in 0.1.3 with [BakeryUsesWheat 1.2.0](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/).
+One of two Wheat has arrived. Look beneath **Bakery** for the remaining **1 Wheat**.
 
 ![Selected Bakery panel showing zero Wheat in storage, a two-Wheat recipe, and “Needs 2 Wheat” below the worker control](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.3/bakery-panel-1p5x.png)
 
-Before the first delivery, the panel shows **Needs 2 Wheat** beneath the baker assignment. Captured in 0.1.3 at 1.5× UI scale with [BakeryUsesWheat 1.2.0](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/).
+Before the first delivery, the panel shows **Needs 2 Wheat** beneath the baker assignment.
 
 ![Hammer icon and 8/7 worker count beneath the focused Lumberyard](https://raw.githubusercontent.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks/0a0c2d39f18174bf7d7945c0c24e443247ca2b80/docs/screenshots/0.1.4/after-1p5x.png)
 
-After an assignment change, look just below the Lumberyard for the hammer and **8/7** count. Captured in 0.1.4 at 1.5× UI scale with simulated controller input.
+After an assignment change, look just below the Lumberyard for the hammer and **8/7** count.
 
 ## Compatibility
 
-- The tooltip reads the active recipe and delivered stock. With [BakeryUsesWheat 1.2.0](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/), the Bakery shows how much Wheat it still needs after each delivery.
-- [Pin a Build Cost](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/PinABuildCost/), [Daybook](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/Daybook/), and [Worker Presets](https://github.com/GKJ-Super-Fantasy-Kingdom/worker-presets) ran together in Super Fantasy Kingdom 0.8.068 at UI scales 1× and 1.5×. You can read a shortage while a cost is pinned and open staffing controls from the inspected building.
-- If a mod keeps its blocking rule private and the game shows only a work warning, the tooltip can show **Idle** or **Work blocked**. Other mods' open tooltips keep priority.
+- Works with Super Fantasy Kingdom **0.8.068** and the other [GKJ mods](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/).
+- Shortages use the active recipe and delivered stock. With [Bakery Uses Wheat](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/), the Bakery tracks Wheat as its ingredient.
+- The list and warnings work alongside [Pin a Build Cost](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/PinABuildCost/), [Daybook](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/Daybook/), and [Worker Presets](https://thunderstore.io/c/super-fantasy-kingdom/p/GKJ/WorkerPresets/). Where two buildings share a name, use the plot coordinates to pick the right one.
+- If another mod keeps its production rules private, the game may only report **Idle** or **Work blocked**. An already open tooltip keeps priority.
+- These community mods can share the same profile. [Achievement Enabler](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/AchievementEnabler/), [Bakery Uses Wheat](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/BakeryUsesWheat/), [More Relics](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/MoreRelics/), [Right Click Skip](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/RightClickSkip/), and [Tavern Food Priorities](https://thunderstore.io/c/super-fantasy-kingdom/p/ownlyme/TavernFoodPriorities/).
 
 ## Installation
 

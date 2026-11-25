@@ -1,8 +1,8 @@
 {
   "name": "ProductionBottlenecks",
-  "version_number": "0.2.3",
+  "version_number": "0.2.4",
   "website_url": "https://github.com/GKJ-Super-Fantasy-Kingdom/production-bottlenecks",
-  "description": "See why production is idle, how much of an ingredient is missing, and which blocked building to visit next with mouse or controller.",
+  "description": "See why buildings are idle, how much of an ingredient is missing, and jump to a building from the Blocked Buildings list.",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2305",
     "BepInEx-HideManagerGameObject_Config-5.4.2304"
