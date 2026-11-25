@@ -51,3 +51,7 @@ After an assignment change, look just below the Lumberyard for the hammer and **
 3. Choose **Start modded**. Once your kingdom loads, point at a blocked production building to see its warning.
 
 [Development, local import and playtesting](docs/development.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
+
+## Support
+
+[Support GKJ Games on Ko-fi](https://ko-fi.com/gkj_games)
