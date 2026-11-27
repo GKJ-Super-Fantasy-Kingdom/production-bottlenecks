@@ -16,6 +16,14 @@ namespace ProductionBottlenecks
                 atlas.spriteCharacterTable[index]?.glyph is TMP_SpriteGlyph glyph && glyph.sprite == sprite;
         }
 
+        internal static string Glyph(TMP_Text label, string name)
+        {
+            var atlas = label?.spriteAsset ?? TMP_Settings.defaultSpriteAsset;
+            if (atlas == null) return null;
+            var asset = TMP_SpriteAsset.SearchForSpriteByHashCode(atlas, TMP_TextUtilities.GetSimpleHashCode(name), true, out int index);
+            return asset != null && index >= 0 ? "<sprite name=\"" + name + "\">" : null;
+        }
+
         internal static string Tag(TextMeshProUGUI label, Sprite sprite)
         {
             if (label == null || !label.richText) return null;

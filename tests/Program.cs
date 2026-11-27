@@ -152,6 +152,23 @@ swapped.Storage.Stored[(int)ResourceType.Wheat] = 4;
 Expect(swapped, "Reported shortage of <sprite name=\"WheatSprite\"> Wheat", "stock arrived before native warning cleared");
 swapped.Missing = ResourceType.None;
 Expect(swapped, null, "wheat stock and warning cleared");
+var styled = new BuildingCrafting { Output = ResourceType.None, Possible = 1, Missing = ResourceType.Wheat };
+styled.Recipes.Add(new CraftingRecipe { product = ResourceType.Tree, ingredients = new[] { new ResourceAmount(ResourceType.Wheat, 3) } });
+styled.Storage.Stored[(int)ResourceType.Wheat] = 1;
+string ResourceTag(UnityEngine.Sprite sprite) => $"<{sprite.name}>";
+string NamedGlyph(string name) => $"<{name}>";
+Check("styled shortage leads with the ingredient and keeps the quantity",
+    ProductionStatus.ReadStyled(styled, ResourceTag, NamedGlyph, true) == "<WheatSprite> Needs 2 Wheat");
+Check("styled shortage with an unavailable glyph keeps its full text",
+    ProductionStatus.ReadStyled(styled, _ => null, NamedGlyph, true) == "Needs 2 Wheat");
+styled.Possible = 0;
+Check("styled empty worker slot uses the native hammer",
+    ProductionStatus.ReadStyled(styled, ResourceTag, NamedGlyph, true) == "<IconWorking> No worker assigned");
+styled.Possible = 1;
+styled.Storage.Capacity[(int)ResourceType.Tree] = 1;
+styled.Storage.Stored[(int)ResourceType.Tree] = 1;
+Check("styled full output distinguishes its own resource from the missing input",
+    ProductionStatus.ReadStyled(styled, ResourceTag, NamedGlyph, true) == "<TreeSprite> Output storage full");
 HoverChecks.Run(Check);
 VisitPointChecks.Run(Check);
 Console.WriteLine($"{count} managed fixture checks passed.");

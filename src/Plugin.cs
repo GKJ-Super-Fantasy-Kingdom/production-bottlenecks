@@ -13,7 +13,7 @@ using SuperFantasyKingdom.Weather;
 
 namespace ProductionBottlenecks
 {
-    [BepInPlugin(Id, "Production Bottlenecks", "0.2.4")]
+    [BepInPlugin(Id, "Production Bottlenecks", "0.2.9")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private const string Id = "sfk.productionbottlenecks";
@@ -192,7 +192,7 @@ namespace ProductionBottlenecks
 
         private void UpdateRow()
         {
-            string reason = selected != null ? ProductionStatus.Read(selected, RowIcon) : null;
+            string reason = selected != null ? ProductionStatus.ReadStyled(selected, RowIcon, name => ResourceIcon.Glyph(label, name), true) : null;
             if (reason != null && label.text != reason)
                 label.text = reason;
             if (row.activeSelf != (reason != null))
@@ -233,7 +233,8 @@ namespace ProductionBottlenecks
             if (row != null && label != null && row.transform.parent.gameObject.activeInHierarchy)
                 UpdateRow();
             if (target != null)
-                UpdateTooltip(ProductionStatus.Read(target, TooltipIcon));
+                UpdateTooltip(ProductionStatus.ReadStyled(target, TooltipIcon,
+                    TooltipGlyph, true));
         }
 
         private string RowIcon(Sprite sprite) => ResourceIcon.Tag(label, sprite);
@@ -254,6 +255,12 @@ namespace ProductionBottlenecks
                 (safe.xMin, safe.yMin, safe.xMax, safe.yMax), GamepadManager.Instance.GetCursorPosition().y);
             if (fitted.X != pos.x || fitted.Y != pos.y)
                 tip.transform.position = new Vector3(fitted.X, fitted.Y, pos.z);
+        }
+
+        private string TooltipGlyph(string name)
+        {
+            var tip = TooltipManager.Instance;
+            return tip != null ? ResourceIcon.Glyph(TooltipLabel(tip), name) : null;
         }
 
         private string TooltipIcon(Sprite sprite)

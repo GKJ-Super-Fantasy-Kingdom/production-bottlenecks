@@ -15,7 +15,8 @@ namespace ProductionBottlenecks
     {
         private const float RowHeight = 74f;
         private const float Gap = 6f;
-        private const float BackHeight = 42f;
+        private const float BackWidth = 230f;
+        private const float BackHeight = 38f;
         // This is the same device-aware Back prompt the game displays in its calendar.
         private static readonly AccessTools.FieldRef<OverlayManager, GameObject> CancelPrompt =
             AccessTools.FieldRefAccess<OverlayManager, GameObject>("cancelButtonPrompt");
@@ -24,6 +25,9 @@ namespace ProductionBottlenecks
             public BuildingCity Building;
             public Button Button;
             public TextMeshProUGUI Text;
+            public TextMeshProUGUI Detail;
+            public TextMeshProUGUI Badge;
+            public string StatusIcon;
             public Image Icon;
             public bool Present;
             public string Title;
@@ -49,27 +53,31 @@ namespace ProductionBottlenecks
         private GameObject empty;
         private TextMeshProUGUI promptStyle;
         private GameObject lastSelection;
-        private GameObject focusMark;
         private float nextRefresh;
 
-        private static Button AddButton(Transform parent, string title, float height, UnityAction action)
+        private static Button AddButton(Transform parent, string title, float height, UnityAction action, Button style = null,
+            Color32? fillTint = null)
         {
-            var prefab = Resources.Load<GameObject>("UI/OverlayElementButton");
-            var style = prefab.GetComponentInChildren<Button>(true);
+            if (style == null)
+                style = Resources.Load<GameObject>("UI/OverlayElementButton").GetComponentInChildren<Button>(true);
             var source = style.GetComponentInChildren<TextMeshProUGUI>(true);
-            var obj = new GameObject(title, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            var obj = new GameObject(title, typeof(RectTransform), typeof(Image), typeof(SteppedButton), typeof(LayoutElement));
             obj.transform.SetParent(parent, false);
             var image = obj.GetComponent<Image>();
             var face = (Image)style.targetGraphic;
             image.sprite = face.sprite;
             image.type = face.type;
-            image.color = face.color;
+            image.color = fillTint.HasValue ? (Color)fillTint.Value : face.color;
             image.pixelsPerUnitMultiplier = face.pixelsPerUnitMultiplier;
-            var button = obj.GetComponent<Button>();
+            var button = obj.GetComponent<SteppedButton>();
             button.targetGraphic = image;
             button.colors = style.colors;
             button.transition = style.transition;
-            button.spriteState = style.spriteState;
+            var sprites = style.spriteState;
+            if (sprites.selectedSprite != null) sprites.highlightedSprite = sprites.selectedSprite;
+            button.spriteState = sprites;
+            button.SetUpEdge(image, fillTint.HasValue || button.transition != Selectable.Transition.SpriteSwap ||
+                sprites.selectedSprite == null);
 
             var label = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
             var caption = label.GetComponent<TextMeshProUGUI>();
@@ -98,6 +106,22 @@ namespace ProductionBottlenecks
             button.navigation = navigation;
             button.gameObject.SetActive(true);
             return button;
+        }
+
+        private static Button AddBack(Transform footer)
+        {
+            // Pin a Build Cost uses the native dialog's Cancel plate for all three pin actions.
+            var style = Resources.Load<GameObject>("UI/OverlayMessage")?.transform.Find("Buttons/Cancel")?.GetComponent<Button>();
+            var back = AddButton(footer, "Back", BackHeight, () => OverlayManager.Instance.Cancel(), style);
+            var caption = back.GetComponentInChildren<TextMeshProUGUI>();
+            var nativeCaption = style != null ? style.GetComponentInChildren<TMP_Text>(true) : null;
+            if (nativeCaption != null) caption.fontSize = nativeCaption.fontSize;
+            caption.enableWordWrapping = false;
+
+            var size = back.GetComponent<LayoutElement>();
+            size.minWidth = size.preferredWidth = BackWidth;
+            size.flexibleWidth = 0;
+            return back;
         }
 
         internal static GameObject AddLauncher(Transform panel, UnityAction open) =>
@@ -174,17 +198,16 @@ namespace ProductionBottlenecks
             footerLayout.childControlWidth = footerLayout.childControlHeight = true;
             footerLayout.childForceExpandWidth = false;
             footerLayout.spacing = Gap;
-            back = AddButton(footer, "Back", BackHeight, () => OverlayManager.Instance.Cancel());
-            var backSize = back.GetComponent<LayoutElement>();
-            backSize.minWidth = backSize.preferredWidth = 96;
-            backSize.flexibleWidth = 0;
+            back = AddBack(footer);
             promptStyle = back.GetComponentInChildren<TextMeshProUGUI>(true);
             visitHint = Instantiate(promptStyle, footer);
             visitHint.name = "Visit hint";
             visitHint.transform.SetAsFirstSibling();
             visitHint.alignment = TextAlignmentOptions.MidlineLeft;
             visitHint.margin = new Vector4(8, 0, 0, 0);
-            visitHint.fontSize = 24;
+            visitHint.enableAutoSizing = true;
+            visitHint.fontSizeMin = 17;
+            visitHint.fontSizeMax = 24;
             visitHint.text = "Select a building to visit.";
             visitHint.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             resourceBar = FindObjectOfType<UIHeader>()?.transform.Find("PanelResources");
@@ -206,16 +229,23 @@ namespace ProductionBottlenecks
         private Entry AddRow(BuildingCity building)
         {
             var slot = new Entry { Building = building };
-            slot.Button = AddButton(content, "Building " + building.GetInstanceID(), RowHeight, () => Jump(building));
+            slot.Button = AddButton(content, "Building " + building.GetInstanceID(), RowHeight, () => Jump(building),
+                fillTint: new Color32(192, 130, 114, 255));
             slot.Text = slot.Button.GetComponentInChildren<TextMeshProUGUI>(true);
-            slot.Text.alignment = TextAlignmentOptions.MidlineLeft;
-            slot.Text.enableAutoSizing = true;
-            slot.Text.fontSizeMin = 15;
-            slot.Text.fontSizeMax = 30;
-            slot.Text.rectTransform.anchorMin = Vector2.zero;
-            slot.Text.rectTransform.anchorMax = Vector2.one;
-            slot.Text.rectTransform.offsetMin = new Vector2(68, 3);
-            slot.Text.rectTransform.offsetMax = new Vector2(-10, -3);
+            PlaceLine(slot.Text, 70, -12, .5f, 1f, 29f);
+            slot.Detail = Instantiate(slot.Text, slot.Button.transform);
+            slot.Detail.name = "Reason";
+            PlaceLine(slot.Detail, 104, -12, 0, .5f, 26f);
+            slot.Badge = Instantiate(slot.Detail, slot.Button.transform);
+            slot.Badge.name = "Status icon";
+            var badge = slot.Badge.rectTransform;
+            badge.anchorMin = new Vector2(0, 0);
+            badge.anchorMax = new Vector2(0, .5f);
+            badge.offsetMin = new Vector2(70, 3);
+            badge.offsetMax = new Vector2(98, 0);
+            slot.Badge.alignment = TextAlignmentOptions.Center;
+            slot.Badge.enableAutoSizing = false;
+            slot.Badge.fontSize = 25;
             var icon = new GameObject("Building icon", typeof(RectTransform), typeof(Image));
             slot.Icon = icon.GetComponent<Image>();
             var rt = slot.Icon.rectTransform;
@@ -225,17 +255,22 @@ namespace ProductionBottlenecks
             rt.sizeDelta = new Vector2(50, 54);
             slot.Icon.raycastTarget = false;
             slot.Icon.preserveAspect = true;
-            var mark = NewRect("Focus mark", slot.Button.transform);
-            mark.anchorMin = new Vector2(0, .15f);
-            mark.anchorMax = new Vector2(0, .85f);
-            mark.pivot = new Vector2(0, .5f);
-            mark.sizeDelta = new Vector2(4, 0);
-            mark.anchoredPosition = new Vector2(5, 0);
-            var ink = mark.gameObject.AddComponent<Image>();
-            ink.color = new Color32(255, 224, 170, 255);
-            ink.raycastTarget = false;
-            mark.gameObject.SetActive(false);
             return slot;
+        }
+
+        private static void PlaceLine(TextMeshProUGUI caption, float left, float right, float bottom, float top, float size)
+        {
+            caption.alignment = TextAlignmentOptions.MidlineLeft;
+            caption.enableWordWrapping = false;
+            caption.overflowMode = TextOverflowModes.Ellipsis;
+            caption.enableAutoSizing = true;
+            caption.fontSizeMin = 17;
+            caption.fontSizeMax = size;
+            var rect = caption.rectTransform;
+            rect.anchorMin = new Vector2(0, bottom);
+            rect.anchorMax = new Vector2(1, top);
+            rect.offsetMin = new Vector2(left, bottom > 0 ? 0 : 3);
+            rect.offsetMax = new Vector2(right, top < 1 ? 0 : -3);
         }
 
         private void Update()
@@ -244,15 +279,12 @@ namespace ProductionBottlenecks
             var current = EventSystem.current?.currentSelectedGameObject;
             if (current != lastSelection)
                 RevealSelection(current);
+
         }
 
         private void RevealSelection(GameObject current)
         {
             lastSelection = current;
-            if (focusMark != null) focusMark.SetActive(false);
-            focusMark = current != null && current.transform.parent == content
-                ? current.transform.Find("Focus mark")?.gameObject : null;
-            if (focusMark != null) focusMark.SetActive(true);
             if (!scroll.vertical || current == null || current.transform.parent != content) return;
             int index = current.transform.GetSiblingIndex();
             float top = index * (RowHeight + Gap);
@@ -305,8 +337,9 @@ namespace ProductionBottlenecks
                     var plot = row.Building.transform.position;
                     heading += $"  <color=#FFE0AA>({plot.x:0.##}, {plot.y:0.##})</color>";
                 }
-                var text = heading + "\n" + row.Reason;
-                if (row.Text.text != text) row.Text.text = text;
+                if (row.Text.text != heading) row.Text.text = heading;
+                if (row.Detail.text != row.Reason) row.Detail.text = row.Reason;
+                if (row.Badge.text != row.StatusIcon) row.Badge.text = row.StatusIcon;
             }
             // Detach retiring rows now; Unity destroys them after the frame.
             foreach (var row in rows)
@@ -420,7 +453,16 @@ namespace ProductionBottlenecks
                 var name = building.GetTitle() ?? string.Empty;
                 titleCounts.TryGetValue(name, out int count);
                 titleCounts[name] = count + 1;
-                var reason = ProductionStatus.Read(building, sprite => ResourceIcon.Tag(promptStyle, sprite));
+                string statusIcon = null;
+                var reason = ProductionStatus.ReadStyled(building, sprite =>
+                {
+                    statusIcon = ResourceIcon.Tag(promptStyle, sprite);
+                    return null;
+                }, name =>
+                {
+                    statusIcon = ResourceIcon.Glyph(promptStyle, name);
+                    return null;
+                }, true);
                 if (reason == null) continue;
                 if (!entries.TryGetValue(building, out var row))
                     entries.Add(building, row = AddRow(building));
@@ -434,6 +476,7 @@ namespace ProductionBottlenecks
                 row.Icon.enabled = sprite != null;
                 row.Title = name;
                 row.Reason = reason;
+                row.StatusIcon = statusIcon ?? string.Empty;
             }
         }
 

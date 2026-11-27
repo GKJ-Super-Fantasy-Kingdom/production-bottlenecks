@@ -1,3 +1,26 @@
+# 0.2.9
+
+- Match the native stepped outline on the Blocked Buildings launcher, rows, and Back button during hover, keyboard or controller focus, and held press.
+- Keep the wider Back button below the scrolling list. Back and Cancel return focus to the building that opened the list.
+- Show native staffing and resource icons beside production warnings, including in the building tooltip.
+
+# 0.2.8 (local review)
+
+- Restore the wider Back button in Blocked Buildings while retaining the Pin action style.
+
+# 0.2.7 (local review)
+
+- Match Blocked Buildings’ Back button to the native dialog style used for Pin, Unpin, and Replace Pin.
+
+# 0.2.6 (local review)
+
+- Use the outlined native Back button in Blocked Buildings, with distinct hover, controller focus and pressed states.
+
+# 0.2.5 (local review)
+
+- Blocked Buildings uses separate columns for building art and status icons, with a shared hover and controller outline and a compact Back footer.
+- Building tooltips lead with the matching resource or staffing icon when available.
+
 # 0.2.4
 
 Clarify the mod’s description and compatibility for players.
